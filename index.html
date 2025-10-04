@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Gestión de Marcas</title>
+    <title>API de Marcas - Gestión Completa</title>
     <style>
         * {
             margin: 0;
@@ -11,88 +11,104 @@
             box-sizing: border-box;
         }
         body {
-            font-family: Arial, sans-serif;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
             background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
             display: flex;
-            height: 100vh;
+            min-height: 100vh;
             justify-content: center;
             align-items: center;
+            padding: 20px;
         }
         .container {
             background: white;
-            padding: 30px;
-            border-radius: 15px;
-            box-shadow: 0 10px 30px rgba(0,0,0,0.3);
+            padding: 40px;
+            border-radius: 20px;
+            box-shadow: 0 20px 40px rgba(0,0,0,0.1);
             text-align: center;
-            width: 450px;
+            width: 100%;
+            max-width: 500px;
         }
         h1 {
             color: #333;
-            margin-bottom: 25px;
-            font-size: 28px;
+            margin-bottom: 30px;
+            font-size: 32px;
+            font-weight: 700;
+        }
+        .subtitle {
+            color: #666;
+            margin-bottom: 30px;
+            font-size: 16px;
         }
         select, input {
-            padding: 12px;
+            padding: 15px;
             font-size: 16px;
-            border-radius: 8px;
-            border: 2px solid #ddd;
+            border-radius: 10px;
+            border: 2px solid #e1e5e9;
             margin: 10px 0;
             width: 100%;
-            transition: border 0.3s;
+            transition: all 0.3s ease;
         }
         select:focus, input:focus {
             border-color: #667eea;
             outline: none;
+            box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
         }
         .buttons {
             display: flex;
-            gap: 10px;
-            margin: 20px 0;
+            gap: 12px;
+            margin: 25px 0;
+            flex-wrap: wrap;
         }
         button {
-            padding: 12px 20px;
+            padding: 15px 25px;
             font-size: 16px;
             border: none;
-            border-radius: 8px;
+            border-radius: 10px;
             cursor: pointer;
             color: white;
             flex: 1;
-            transition: all 0.3s;
-            font-weight: bold;
+            transition: all 0.3s ease;
+            font-weight: 600;
+            min-width: 120px;
         }
         button:hover {
-            transform: translateY(-2px);
-            box-shadow: 0 5px 15px rgba(0,0,0,0.2);
+            transform: translateY(-3px);
+            box-shadow: 0 10px 20px rgba(0,0,0,0.2);
+        }
+        button:active {
+            transform: translateY(-1px);
         }
         #crear {
-            background: #28a745;
+            background: linear-gradient(135deg, #28a745, #20c997);
         }
         #crear:hover {
-            background: #218838;
+            background: linear-gradient(135deg, #218838, #1e9e8a);
         }
         #editar {
-            background: #007bff;
+            background: linear-gradient(135deg, #007bff, #0056b3);
         }
         #editar:hover {
-            background: #0056b3;
+            background: linear-gradient(135deg, #0056b3, #004085);
         }
         #eliminar {
-            background: #dc3545;
+            background: linear-gradient(135deg, #dc3545, #c82333);
         }
         #eliminar:hover {
-            background: #c82333;
+            background: linear-gradient(135deg, #c82333, #a71e2a);
         }
         #resultado {
-            margin-top: 20px;
-            padding: 15px;
-            border-radius: 8px;
-            font-weight: bold;
-            min-height: 50px;
+            margin-top: 25px;
+            padding: 20px;
+            border-radius: 10px;
+            font-weight: 600;
+            min-height: 60px;
             display: flex;
             align-items: center;
             justify-content: center;
             background: #f8f9fa;
             border: 2px dashed #dee2e6;
+            font-size: 16px;
+            text-align: center;
         }
         .success {
             background: #d4edda !important;
@@ -105,15 +121,37 @@
             color: #721c24;
         }
         .info {
-            background: #cce7ff !important;
-            border-color: #b3d9ff !important;
-            color: #004085;
+            background: #d1ecf1 !important;
+            border-color: #bee5eb !important;
+            color: #0c5460;
+        }
+        .loading {
+            background: #fff3cd !important;
+            border-color: #ffeaa7 !important;
+            color: #856404;
+        }
+        .api-info {
+            margin-top: 30px;
+            padding: 15px;
+            background: #f8f9fa;
+            border-radius: 10px;
+            border-left: 4px solid #667eea;
+        }
+        .api-info h3 {
+            color: #333;
+            margin-bottom: 10px;
+        }
+        .api-info p {
+            color: #666;
+            font-size: 14px;
+            margin: 5px 0;
         }
     </style>
 </head>
 <body>
     <div class="container">
-        <h1>🏷️ Gestión de Marcas</h1>
+        <h1>🏷️ API de Marcas</h1>
+        <div class="subtitle">Gestión completa de marcas - Desplegado en Render</div>
 
         <select id="marcaSelect">
             <option value="">-- Selecciona una marca --</option>
@@ -128,42 +166,59 @@
         </div>
 
         <div id="resultado" class="info">
-            Esperando acción...
+            ✅ API conectada. Selecciona una acción.
+        </div>
+
+        <div class="api-info">
+            <h3>📚 Endpoints disponibles:</h3>
+            <p><strong>GET</strong> /api/marcas - Todas las marcas</p>
+            <p><strong>GET</strong> /api/marcas/:id - Marca específica</p>
+            <p><strong>POST</strong> /api/marcas - Crear marca</p>
+            <p><strong>PUT</strong> /api/marcas/:id - Actualizar marca</p>
+            <p><strong>DELETE</strong> /api/marcas/:id - Eliminar marca</p>
         </div>
     </div>
 
     <script>
-        const API_URL = "http://localhost:3000/api/marcas";
+        // URL base - se adapta automáticamente al entorno
+        const API_URL = window.location.origin + "/api/marcas";
 
         // Cargar marcas al iniciar
-        document.addEventListener('DOMContentLoaded', cargarMarcas);
+        document.addEventListener('DOMContentLoaded', function() {
+            console.log('🌐 Conectando a:', API_URL);
+            cargarMarcas();
+        });
 
         async function cargarMarcas() {
             try {
                 const resultado = document.getElementById("resultado");
-                resultado.className = "info";
+                resultado.className = "loading";
                 resultado.textContent = "🔄 Cargando marcas...";
                 
                 const res = await fetch(API_URL);
-                if (!res.ok) throw new Error('Error en la respuesta');
+                if (!res.ok) throw new Error(`Error ${res.status}: ${res.statusText}`);
                 
                 const marcas = await res.json();
                 const select = document.getElementById("marcaSelect");
                 select.innerHTML = "<option value=''>-- Selecciona una marca --</option>";
                 
-                marcas.forEach(marca => {
-                    const option = document.createElement("option");
-                    option.value = marca.id;
-                    option.textContent = `${marca.nombre} (ID: ${marca.id})`;
-                    select.appendChild(option);
-                });
+                if (marcas.length === 0) {
+                    select.innerHTML = "<option value=''>-- No hay marcas --</option>";
+                } else {
+                    marcas.forEach(marca => {
+                        const option = document.createElement("option");
+                        option.value = marca.id;
+                        option.textContent = `${marca.nombre} (ID: ${marca.id})`;
+                        select.appendChild(option);
+                    });
+                }
                 
                 resultado.className = "success";
                 resultado.textContent = `✅ ${marcas.length} marcas cargadas correctamente`;
             } catch (err) {
                 const resultado = document.getElementById("resultado");
                 resultado.className = "error";
-                resultado.textContent = "❌ Error al cargar marcas";
+                resultado.textContent = `❌ Error al cargar marcas: ${err.message}`;
                 console.error("Error:", err);
             }
         }
@@ -179,7 +234,7 @@
             }
 
             try {
-                resultado.className = "info";
+                resultado.className = "loading";
                 resultado.textContent = "🔄 Creando marca...";
                 
                 const res = await fetch(API_URL, {
@@ -224,7 +279,7 @@
             }
 
             try {
-                resultado.className = "info";
+                resultado.className = "loading";
                 resultado.textContent = "🔄 Actualizando marca...";
                 
                 const res = await fetch(`${API_URL}/${id}`, {
@@ -268,7 +323,7 @@
             }
 
             try {
-                resultado.className = "info";
+                resultado.className = "loading";
                 resultado.textContent = "🔄 Eliminando marca...";
                 
                 const res = await fetch(`${API_URL}/${id}`, { 
@@ -292,6 +347,14 @@
                 console.error("Error:", err);
             }
         }
+
+        // Actualizar input cuando se selecciona una marca
+        document.getElementById("marcaSelect").addEventListener("change", function() {
+            if (this.value) {
+                const nombre = this.options[this.selectedIndex].text.split(' (ID:')[0];
+                document.getElementById("marcaInput").value = nombre;
+            }
+        });
     </script>
 </body>
 </html>
