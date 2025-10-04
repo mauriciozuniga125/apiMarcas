@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Seleccionar Marca</title>
+  <title>Gestión de Marcas</title>
   <style>
     body {
       font-family: Arial, sans-serif;
@@ -17,11 +17,13 @@
 
     .container {
       background: white;
-      padding: 20px 30px;
+      padding: 30px;
       border-radius: 12px;
       box-shadow: 0px 8px 20px rgba(0,0,0,0.2);
       text-align: center;
       animation: fadeIn 1s ease-in-out;
+      max-width: 500px;
+      width: 90%;
     }
 
     h1 {
@@ -29,13 +31,21 @@
       margin-bottom: 20px;
     }
 
-    select {
+    .section {
+      margin: 20px 0;
+      padding: 20px;
+      border: 1px solid #eee;
+      border-radius: 8px;
+    }
+
+    select, input {
       padding: 10px;
       font-size: 16px;
       border-radius: 8px;
       border: 1px solid #ccc;
-      margin-bottom: 20px;
+      margin: 10px 0;
       outline: none;
+      width: 80%;
     }
 
     button {
@@ -44,20 +54,45 @@
       border: none;
       border-radius: 8px;
       cursor: pointer;
+      transition: 0.3s;
+      margin: 5px;
+    }
+
+    .btn-primary {
       background: #4CAF50;
       color: white;
-      transition: 0.3s;
+    }
+
+    .btn-secondary {
+      background: #2196F3;
+      color: white;
     }
 
     button:hover {
-      background: #45a049;
       transform: scale(1.05);
     }
 
-    #resultado {
+    .btn-primary:hover {
+      background: #45a049;
+    }
+
+    .btn-secondary:hover {
+      background: #1976D2;
+    }
+
+    #resultado, #registroResultado {
       margin-top: 20px;
       font-weight: bold;
       color: #222;
+      min-height: 24px;
+    }
+
+    .success {
+      color: #4CAF50;
+    }
+
+    .error {
+      color: #f44336;
     }
 
     @keyframes fadeIn {
@@ -68,16 +103,33 @@
 </head>
 <body>
   <div class="container">
-    <h1>Elige una Marca</h1>
-    <select id="marcaSelect">
-      <option value="">Cargando marcas...</option>
-    </select>
-    <br>
-    <button onclick="mostrarMarca()">Mostrar Selección</button>
-    <div id="resultado"></div>
+    <h1>Gestión de Marcas</h1>
+    
+    <!-- Sección para registrar nueva marca -->
+    <div class="section">
+      <h2>Registrar Nueva Marca</h2>
+      <input type="text" id="nuevaMarca" placeholder="Nombre de la nueva marca">
+      <br>
+      <button class="btn-primary" onclick="registrarMarca()">Registrar Marca</button>
+      <div id="registroResultado"></div>
+    </div>
+
+    <!-- Sección para seleccionar marca existente -->
+    <div class="section">
+      <h2>Seleccionar Marca Existente</h2>
+      <select id="marcaSelect">
+        <option value="">Cargando marcas...</option>
+      </select>
+      <br>
+      <button class="btn-secondary" onclick="mostrarMarca()">Mostrar Selección</button>
+      <div id="resultado"></div>
+    </div>
   </div>
 
   <script>
+    // Cargar marcas al iniciar
+    cargarMarcas();
+
     async function cargarMarcas() {
       try {
         const res = await fetch("http://localhost:3000/api/marcas");
@@ -94,6 +146,7 @@
         });
       } catch (err) {
         console.error("Error al cargar marcas", err);
+        mostrarError("registroResultado", "Error al cargar las marcas");
       }
     }
 
@@ -102,13 +155,60 @@
       const resultado = document.getElementById("resultado");
       if (select.value) {
         resultado.textContent = "Has seleccionado la marca: " + select.options[select.selectedIndex].text;
+        resultado.className = "success";
       } else {
         resultado.textContent = "⚠️ No has seleccionado ninguna marca.";
+        resultado.className = "error";
       }
     }
 
-    // Llamar al cargar la página
-    cargarMarcas();
+    async function registrarMarca() {
+      const nombreMarca = document.getElementById("nuevaMarca").value.trim();
+      const resultado = document.getElementById("registroResultado");
+
+      if (!nombreMarca) {
+        resultado.textContent = "⚠️ Por favor, ingresa un nombre para la marca.";
+        resultado.className = "error";
+        return;
+      }
+
+      try {
+        const response = await fetch("http://localhost:3000/api/marcas", {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json"
+          },
+          body: JSON.stringify({ nombre: nombreMarca })
+        });
+
+        const data = await response.json();
+
+        if (response.ok) {
+          resultado.textContent = "✅ " + data.mensaje + " - ID: " + data.marca.id;
+          resultado.className = "success";
+          
+          // Limpiar el campo de entrada
+          document.getElementById("nuevaMarca").value = "";
+          
+          // Recargar la lista de marcas
+          cargarMarcas();
+        } else {
+          resultado.textContent = "❌ " + data.error;
+          resultado.className = "error";
+        }
+      } catch (err) {
+        console.error("Error al registrar marca:", err);
+        resultado.textContent = "❌ Error al conectar con el servidor";
+        resultado.className = "error";
+      }
+    }
+
+    // Permitir enviar con Enter
+    document.getElementById("nuevaMarca").addEventListener("keypress", function(event) {
+      if (event.key === "Enter") {
+        registrarMarca();
+      }
+    });
   </script>
 </body>
 </html>
