@@ -75,6 +75,10 @@ app.post("/api/marcas", (req, res) => {
   
   nombre = String(nombre).trim();
   
+  if (nombre === "") {
+    return res.status(400).json({ error: "El nombre no puede estar vacío" });
+  }
+  
   const sql = "INSERT INTO marcas (nom_marca) VALUES (?)";
   db.query(sql, [nombre], (err, result) => {
     if (err) {
@@ -102,6 +106,10 @@ app.put("/api/marcas/:id", (req, res) => {
   }
   
   nombre = String(nombre).trim();
+  
+  if (nombre === "") {
+    return res.status(400).json({ error: "El nombre no puede estar vacío" });
+  }
   
   const sql = "UPDATE marcas SET nom_marca = ? WHERE id_marca = ?";
   db.query(sql, [nombre, id], (err, result) => {
@@ -153,17 +161,49 @@ app.get("/", (req, res) => {
 
 // Health check para Render
 app.get("/health", (req, res) => {
-  res.status(200).json({ status: "OK", message: "API funcionando" });
+  res.status(200).json({ 
+    status: "OK", 
+    message: "API de Marcas funcionando correctamente",
+    timestamp: new Date().toISOString()
+  });
+});
+
+// Ruta de prueba
+app.get("/test", (req, res) => {
+  res.json({ 
+    message: "🚀 API de Marcas desplegada en Render",
+    endpoints: {
+      "GET /api/marcas": "Obtener todas las marcas",
+      "GET /api/marcas/:id": "Obtener una marca por ID",
+      "POST /api/marcas": "Crear nueva marca",
+      "PUT /api/marcas/:id": "Actualizar marca",
+      "DELETE /api/marcas/:id": "Eliminar marca"
+    }
+  });
+});
+
+// Manejo de rutas no encontradas
+app.use((req, res) => {
+  res.status(404).json({ error: "Ruta no encontrada" });
+});
+
+// Manejo de errores global
+app.use((err, req, res, next) => {
+  console.error("❌ Error global:", err);
+  res.status(500).json({ error: "Error interno del servidor" });
 });
 
 // Iniciar servidor
 const PORT = process.env.PORT || 3000;
 app.listen(PORT, '0.0.0.0', () => {
   console.log(`🚀 Servidor corriendo en puerto ${PORT}`);
+  console.log(`🌐 Entorno: ${process.env.NODE_ENV || 'development'}`);
   console.log(`📊 Endpoints disponibles:`);
   console.log(`   GET    /api/marcas`);
   console.log(`   GET    /api/marcas/:id`);
   console.log(`   POST   /api/marcas`);
   console.log(`   PUT    /api/marcas/:id`);
   console.log(`   DELETE /api/marcas/:id`);
+  console.log(`   GET    /health (Health Check)`);
+  console.log(`   GET    /test (Ruta de prueba)`);
 });
