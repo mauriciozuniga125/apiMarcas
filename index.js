@@ -1,248 +1,297 @@
-const express = require("express");
-const cors = require("cors");
-const mysql = require("mysql2");
-const path = require("path");
-require("dotenv").config();
-
-const app = express();
-app.use(cors());
-app.use(express.json());
-
-// ✅ Conexión a la base de datos
-const db = mysql.createConnection({
-  host: process.env.DB_HOST,
-  user: process.env.DB_USER,
-  password: process.env.DB_PASS,
-  database: process.env.DB_NAME,
-  port: process.env.DB_PORT
-});
-
-db.connect(err => {
-  if (err) {
-    console.error("❌ Error conectando a MySQL:", err.message);
-  } else {
-    console.log("✅ Conectado a MySQL en Railway");
-  }
-});
-
-// ✅ Variable para modo testing
-const MODO_TESTING = process.env.MODO_TESTING === 'true';
-
-// ✅ Función para validar que solo contiene letras y espacios
-function validarSoloLetras(texto) {
-  const regex = /^[A-Za-zÁáÉéÍíÓóÚúÑñ\s]+$/;
-  return regex.test(texto);
-}
-
-// ✅ Servir index.html desde la raíz
-app.get("/", (req, res) => {
-  res.sendFile(path.join(__dirname, "index.html"));
-});
-
-// ✅ Endpoint GET para obtener marcas
-app.get("/api/marcas", (req, res) => {
-  db.query("SELECT id_marca AS id, nom_marca AS nombre FROM marcas ORDER BY id_marca", (err, rows) => {
-    if (err) {
-      console.error(err);
-      return res.status(500).json({ error: "Error al obtener marcas" });
-    }
-    res.json(rows);
-  });
-});
-
-// ✅ Endpoint GET para obtener una marca específica
-app.get("/api/marcas/:id", (req, res) => {
-  const marcaId = req.params.id;
-  
-  db.query("SELECT id_marca AS id, nom_marca AS nombre FROM marcas WHERE id_marca = ?", [marcaId], (err, rows) => {
-    if (err) {
-      console.error(err);
-      return res.status(500).json({ error: "Error al obtener la marca" });
-    }
-    
-    if (rows.length === 0) {
-      return res.status(404).json({ error: "Marca no encontrada" });
-    }
-    
-    res.json(rows[0]);
-  });
-});
-
-// ✅ Endpoint POST para registrar nueva marca
-app.post("/api/marcas", (req, res) => {
-  const { nombre } = req.body;
-
-  // Validar que se envió el nombre
-  if (!nombre) {
-    return res.status(400).json({ error: "El nombre de la marca es requerido" });
-  }
-
-  // Validar que solo contiene letras
-  if (!validarSoloLetras(nombre)) {
-    return res.status(400).json({ 
-      error: "El nombre de la marca solo debe contener letras y espacios. No se permiten números ni caracteres especiales." 
-    });
-  }
-
-  // Validar longitud mínima
-  if (nombre.trim().length < 2) {
-    return res.status(400).json({ 
-      error: "El nombre de la marca debe tener al menos 2 caracteres" 
-    });
-  }
-
-  // Primero obtenemos el máximo ID actual para incrementarlo
-  db.query("SELECT MAX(id_marca) as maxId FROM marcas", (err, results) => {
-    if (err) {
-      console.error(err);
-      return res.status(500).json({ error: "Error al obtener el último ID" });
-    }
-
-    const nuevoId = (results[0].maxId || 0) + 1;
-
-    // Insertar la nueva marca
-    const query = "INSERT INTO marcas (id_marca, nom_marca) VALUES (?, ?)";
-    db.query(query, [nuevoId, nombre.trim()], (err, result) => {
-      if (err) {
-        console.error(err);
-        return res.status(500).json({ error: "Error al registrar la marca" });
-      }
-
-      res.status(201).json({
-        mensaje: "Marca registrada con éxito",
-        marca: {
-          id: nuevoId,
-          nombre: nombre.trim()
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Gestión de Marcas</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
         }
-      });
-    });
-  });
-});
-
-// ✅ Endpoint PUT para actualizar una marca
-app.put("/api/marcas/:id", (req, res) => {
-  // 🔴 SIMULAR ERROR 404 EN MODO TESTING
-  if (MODO_TESTING) {
-    console.log("🔴 MODO TESTING: Simulando error 404 para PUT");
-    return res.status(404).json({ 
-      error: "Marca no encontrada - Modo Testing Activado",
-      testing: true,
-      detalles: "Este es un error simulado para pruebas de frontend"
-    });
-  }
-
-  const marcaId = req.params.id;
-  const { nombre } = req.body;
-
-  // Validar que se envió el nombre
-  if (!nombre) {
-    return res.status(400).json({ error: "El nombre de la marca es requerido" });
-  }
-
-  // Validar que solo contiene letras
-  if (!validarSoloLetras(nombre)) {
-    return res.status(400).json({ 
-      error: "El nombre de la marca solo debe contener letras y espacios. No se permiten números ni caracteres especiales." 
-    });
-  }
-
-  // Validar longitud mínima
-  if (nombre.trim().length < 2) {
-    return res.status(400).json({ 
-      error: "El nombre de la marca debe tener al menos 2 caracteres" 
-    });
-  }
-
-  // Verificar si la marca existe
-  db.query("SELECT id_marca FROM marcas WHERE id_marca = ?", [marcaId], (err, results) => {
-    if (err) {
-      console.error(err);
-      return res.status(500).json({ error: "Error al verificar la marca" });
-    }
-
-    if (results.length === 0) {
-      return res.status(404).json({ error: "Marca no encontrada" });
-    }
-
-    // Actualizar la marca
-    const query = "UPDATE marcas SET nom_marca = ? WHERE id_marca = ?";
-    db.query(query, [nombre.trim(), marcaId], (err, result) => {
-      if (err) {
-        console.error(err);
-        return res.status(500).json({ error: "Error al actualizar la marca" });
-      }
-
-      res.json({
-        mensaje: "Marca actualizada con éxito",
-        marca: {
-          id: parseInt(marcaId),
-          nombre: nombre.trim()
+        body {
+            font-family: Arial, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            display: flex;
+            height: 100vh;
+            justify-content: center;
+            align-items: center;
         }
-      });
-    });
-  });
-});
+        .container {
+            background: white;
+            padding: 30px;
+            border-radius: 15px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.3);
+            text-align: center;
+            width: 450px;
+        }
+        h1 {
+            color: #333;
+            margin-bottom: 25px;
+            font-size: 28px;
+        }
+        select, input {
+            padding: 12px;
+            font-size: 16px;
+            border-radius: 8px;
+            border: 2px solid #ddd;
+            margin: 10px 0;
+            width: 100%;
+            transition: border 0.3s;
+        }
+        select:focus, input:focus {
+            border-color: #667eea;
+            outline: none;
+        }
+        .buttons {
+            display: flex;
+            gap: 10px;
+            margin: 20px 0;
+        }
+        button {
+            padding: 12px 20px;
+            font-size: 16px;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            color: white;
+            flex: 1;
+            transition: all 0.3s;
+            font-weight: bold;
+        }
+        button:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(0,0,0,0.2);
+        }
+        #crear {
+            background: #28a745;
+        }
+        #crear:hover {
+            background: #218838;
+        }
+        #editar {
+            background: #007bff;
+        }
+        #editar:hover {
+            background: #0056b3;
+        }
+        #eliminar {
+            background: #dc3545;
+        }
+        #eliminar:hover {
+            background: #c82333;
+        }
+        #resultado {
+            margin-top: 20px;
+            padding: 15px;
+            border-radius: 8px;
+            font-weight: bold;
+            min-height: 50px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background: #f8f9fa;
+            border: 2px dashed #dee2e6;
+        }
+        .success {
+            background: #d4edda !important;
+            border-color: #c3e6cb !important;
+            color: #155724;
+        }
+        .error {
+            background: #f8d7da !important;
+            border-color: #f5c6cb !important;
+            color: #721c24;
+        }
+        .info {
+            background: #cce7ff !important;
+            border-color: #b3d9ff !important;
+            color: #004085;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🏷️ Gestión de Marcas</h1>
 
-// ✅ Endpoint DELETE para eliminar una marca
-app.delete("/api/marcas/:id", (req, res) => {
-  // 🔴 SIMULAR ERROR 404 EN MODO TESTING
-  if (MODO_TESTING) {
-    console.log("🔴 MODO TESTING: Simulando error 404 para DELETE");
-    return res.status(404).json({ 
-      error: "Marca no encontrada - Modo Testing Activado",
-      testing: true,
-      detalles: "Este es un error simulado para pruebas de frontend"
-    });
-  }
+        <select id="marcaSelect">
+            <option value="">-- Selecciona una marca --</option>
+        </select>
+        
+        <input type="text" id="marcaInput" placeholder="Escribe el nombre de la marca...">
 
-  const marcaId = req.params.id;
+        <div class="buttons">
+            <button id="crear" onclick="crearMarca()">➕ Crear</button>
+            <button id="editar" onclick="actualizarMarca()">✏️ Editar</button>
+            <button id="eliminar" onclick="eliminarMarca()">🗑️ Eliminar</button>
+        </div>
 
-  // Verificar si la marca existe
-  db.query("SELECT id_marca FROM marcas WHERE id_marca = ?", [marcaId], (err, results) => {
-    if (err) {
-      console.error(err);
-      return res.status(500).json({ error: "Error al verificar la marca" });
-    }
+        <div id="resultado" class="info">
+            Esperando acción...
+        </div>
+    </div>
 
-    if (results.length === 0) {
-      return res.status(404).json({ error: "Marca no encontrada" });
-    }
+    <script>
+        const API_URL = "http://localhost:3000/api/marcas";
 
-    // Eliminar la marca
-    const query = "DELETE FROM marcas WHERE id_marca = ?";
-    db.query(query, [marcaId], (err, result) => {
-      if (err) {
-        console.error(err);
-        return res.status(500).json({ error: "Error al eliminar la marca" });
-      }
+        // Cargar marcas al iniciar
+        document.addEventListener('DOMContentLoaded', cargarMarcas);
 
-      res.json({
-        mensaje: "Marca eliminada con éxito",
-        marcaId: parseInt(marcaId)
-      });
-    });
-  });
-});
+        async function cargarMarcas() {
+            try {
+                const resultado = document.getElementById("resultado");
+                resultado.className = "info";
+                resultado.textContent = "🔄 Cargando marcas...";
+                
+                const res = await fetch(API_URL);
+                if (!res.ok) throw new Error('Error en la respuesta');
+                
+                const marcas = await res.json();
+                const select = document.getElementById("marcaSelect");
+                select.innerHTML = "<option value=''>-- Selecciona una marca --</option>";
+                
+                marcas.forEach(marca => {
+                    const option = document.createElement("option");
+                    option.value = marca.id;
+                    option.textContent = `${marca.nombre} (ID: ${marca.id})`;
+                    select.appendChild(option);
+                });
+                
+                resultado.className = "success";
+                resultado.textContent = `✅ ${marcas.length} marcas cargadas correctamente`;
+            } catch (err) {
+                const resultado = document.getElementById("resultado");
+                resultado.className = "error";
+                resultado.textContent = "❌ Error al cargar marcas";
+                console.error("Error:", err);
+            }
+        }
 
-// ✅ Endpoint para controlar modo testing (solo desarrollo)
-app.post("/api/testing/modo", (req, res) => {
-  const { activado } = req.body;
-  
-  if (process.env.NODE_ENV !== 'production') {
-    MODO_TESTING = activado === true;
-    console.log(`🛠️ Modo Testing ${MODO_TESTING ? 'ACTIVADO' : 'DESACTIVADO'}`);
-    res.json({ 
-      modoTesting: MODO_TESTING,
-      mensaje: `Modo Testing ${MODO_TESTING ? 'activado' : 'desactivado'}`
-    });
-  } else {
-    res.status(403).json({ error: "Modo testing no disponible en producción" });
-  }
-});
+        async function crearMarca() {
+            const nombre = document.getElementById("marcaInput").value.trim();
+            const resultado = document.getElementById("resultado");
+            
+            if (!nombre) {
+                resultado.className = "error";
+                resultado.textContent = "❌ Escribe un nombre para la marca";
+                return;
+            }
 
-// ✅ Puerto dinámico
-const PORT = process.env.PORT || 3000;
-app.listen(PORT, () => {
-  console.log(`🚀 Servidor corriendo en puerto ${PORT}`);
-  console.log(`🛠️ Modo Testing: ${MODO_TESTING ? 'ACTIVADO 🔴' : 'DESACTIVADO ✅'}`);
-});
+            try {
+                resultado.className = "info";
+                resultado.textContent = "🔄 Creando marca...";
+                
+                const res = await fetch(API_URL, {
+                    method: "POST",
+                    headers: { "Content-Type": "application/json" },
+                    body: JSON.stringify({ nombre })
+                });
+
+                const data = await res.json();
+                
+                if (res.ok) {
+                    resultado.className = "success";
+                    resultado.textContent = `✅ Marca creada: "${data.nombre}" (ID: ${data.id})`;
+                    document.getElementById("marcaInput").value = "";
+                    cargarMarcas();
+                } else {
+                    resultado.className = "error";
+                    resultado.textContent = `❌ Error: ${data.error}`;
+                }
+            } catch (err) {
+                resultado.className = "error";
+                resultado.textContent = "❌ Error de conexión con el servidor";
+                console.error("Error:", err);
+            }
+        }
+
+        async function actualizarMarca() {
+            const id = document.getElementById("marcaSelect").value;
+            const nombre = document.getElementById("marcaInput").value.trim();
+            const resultado = document.getElementById("resultado");
+            
+            if (!id) {
+                resultado.className = "error";
+                resultado.textContent = "❌ Selecciona una marca para editar";
+                return;
+            }
+            
+            if (!nombre) {
+                resultado.className = "error";
+                resultado.textContent = "❌ Escribe el nuevo nombre";
+                return;
+            }
+
+            try {
+                resultado.className = "info";
+                resultado.textContent = "🔄 Actualizando marca...";
+                
+                const res = await fetch(`${API_URL}/${id}`, {
+                    method: "PUT",
+                    headers: { "Content-Type": "application/json" },
+                    body: JSON.stringify({ nombre })
+                });
+
+                const data = await res.json();
+                
+                if (res.ok) {
+                    resultado.className = "success";
+                    resultado.textContent = `✅ Marca actualizada: "${data.nombre}"`;
+                    document.getElementById("marcaInput").value = "";
+                    cargarMarcas();
+                } else {
+                    resultado.className = "error";
+                    resultado.textContent = `❌ Error: ${data.error}`;
+                }
+            } catch (err) {
+                resultado.className = "error";
+                resultado.textContent = "❌ Error de conexión con el servidor";
+                console.error("Error:", err);
+            }
+        }
+
+        async function eliminarMarca() {
+            const id = document.getElementById("marcaSelect").value;
+            const resultado = document.getElementById("resultado");
+            
+            if (!id) {
+                resultado.className = "error";
+                resultado.textContent = "❌ Selecciona una marca para eliminar";
+                return;
+            }
+
+            const marcaSeleccionada = document.getElementById("marcaSelect").options[document.getElementById("marcaSelect").selectedIndex].text;
+            
+            if (!confirm(`¿Estás seguro de eliminar la marca:\n"${marcaSeleccionada}"?`)) {
+                return;
+            }
+
+            try {
+                resultado.className = "info";
+                resultado.textContent = "🔄 Eliminando marca...";
+                
+                const res = await fetch(`${API_URL}/${id}`, { 
+                    method: "DELETE" 
+                });
+                
+                const data = await res.json();
+                
+                if (res.ok) {
+                    resultado.className = "success";
+                    resultado.textContent = `✅ ${data.mensaje}`;
+                    document.getElementById("marcaInput").value = "";
+                    cargarMarcas();
+                } else {
+                    resultado.className = "error";
+                    resultado.textContent = `❌ Error: ${data.error}`;
+                }
+            } catch (err) {
+                resultado.className = "error";
+                resultado.textContent = "❌ Error de conexión con el servidor";
+                console.error("Error:", err);
+            }
+        }
+    </script>
+</body>
+</html>
