@@ -1,297 +1,169 @@
-<!DOCTYPE html>
-<html lang="es">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Gestión de Marcas</title>
-    <style>
-        * {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
-        }
-        body {
-            font-family: Arial, sans-serif;
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-            display: flex;
-            height: 100vh;
-            justify-content: center;
-            align-items: center;
-        }
-        .container {
-            background: white;
-            padding: 30px;
-            border-radius: 15px;
-            box-shadow: 0 10px 30px rgba(0,0,0,0.3);
-            text-align: center;
-            width: 450px;
-        }
-        h1 {
-            color: #333;
-            margin-bottom: 25px;
-            font-size: 28px;
-        }
-        select, input {
-            padding: 12px;
-            font-size: 16px;
-            border-radius: 8px;
-            border: 2px solid #ddd;
-            margin: 10px 0;
-            width: 100%;
-            transition: border 0.3s;
-        }
-        select:focus, input:focus {
-            border-color: #667eea;
-            outline: none;
-        }
-        .buttons {
-            display: flex;
-            gap: 10px;
-            margin: 20px 0;
-        }
-        button {
-            padding: 12px 20px;
-            font-size: 16px;
-            border: none;
-            border-radius: 8px;
-            cursor: pointer;
-            color: white;
-            flex: 1;
-            transition: all 0.3s;
-            font-weight: bold;
-        }
-        button:hover {
-            transform: translateY(-2px);
-            box-shadow: 0 5px 15px rgba(0,0,0,0.2);
-        }
-        #crear {
-            background: #28a745;
-        }
-        #crear:hover {
-            background: #218838;
-        }
-        #editar {
-            background: #007bff;
-        }
-        #editar:hover {
-            background: #0056b3;
-        }
-        #eliminar {
-            background: #dc3545;
-        }
-        #eliminar:hover {
-            background: #c82333;
-        }
-        #resultado {
-            margin-top: 20px;
-            padding: 15px;
-            border-radius: 8px;
-            font-weight: bold;
-            min-height: 50px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            background: #f8f9fa;
-            border: 2px dashed #dee2e6;
-        }
-        .success {
-            background: #d4edda !important;
-            border-color: #c3e6cb !important;
-            color: #155724;
-        }
-        .error {
-            background: #f8d7da !important;
-            border-color: #f5c6cb !important;
-            color: #721c24;
-        }
-        .info {
-            background: #cce7ff !important;
-            border-color: #b3d9ff !important;
-            color: #004085;
-        }
-    </style>
-</head>
-<body>
-    <div class="container">
-        <h1>🏷️ Gestión de Marcas</h1>
+const express = require("express");
+const cors = require("cors");
+const mysql = require("mysql2");
+const path = require("path");
 
-        <select id="marcaSelect">
-            <option value="">-- Selecciona una marca --</option>
-        </select>
-        
-        <input type="text" id="marcaInput" placeholder="Escribe el nombre de la marca...">
+const app = express();
 
-        <div class="buttons">
-            <button id="crear" onclick="crearMarca()">➕ Crear</button>
-            <button id="editar" onclick="actualizarMarca()">✏️ Editar</button>
-            <button id="eliminar" onclick="eliminarMarca()">🗑️ Eliminar</button>
-        </div>
+// Middlewares
+app.use(cors());
+app.use(express.json());
+app.use(express.static(__dirname));
 
-        <div id="resultado" class="info">
-            Esperando acción...
-        </div>
-    </div>
+// Conexión a base de datos
+const db = mysql.createConnection({
+  host: "caboose.proxy.rlwy.net",
+  port: 43751,
+  user: "root",
+  password: "gzGmMybpEUnAsvoNuOeUWzefhUiDDjlN",
+  database: "railway"
+});
 
-    <script>
-        const API_URL = "http://localhost:3000/api/marcas";
+db.connect(err => {
+  if (err) {
+    console.error("❌ Error conectando a MySQL:", err.message);
+    return;
+  }
+  console.log("✅ Conectado a MySQL en Railway");
+});
 
-        // Cargar marcas al iniciar
-        document.addEventListener('DOMContentLoaded', cargarMarcas);
+// 1. GET TODAS LAS MARCAS
+app.get("/api/marcas", (req, res) => {
+  console.log("🔍 GET /api/marcas");
+  
+  const sql = "SELECT id_marca AS id, nom_marca AS nombre FROM marcas";
+  db.query(sql, (err, rows) => {
+    if (err) {
+      console.error("❌ Error en GET:", err);
+      return res.status(500).json({ error: "Error al obtener marcas" });
+    }
+    console.log(`✅ GET: ${rows.length} marcas`);
+    res.json(rows);
+  });
+});
 
-        async function cargarMarcas() {
-            try {
-                const resultado = document.getElementById("resultado");
-                resultado.className = "info";
-                resultado.textContent = "🔄 Cargando marcas...";
-                
-                const res = await fetch(API_URL);
-                if (!res.ok) throw new Error('Error en la respuesta');
-                
-                const marcas = await res.json();
-                const select = document.getElementById("marcaSelect");
-                select.innerHTML = "<option value=''>-- Selecciona una marca --</option>";
-                
-                marcas.forEach(marca => {
-                    const option = document.createElement("option");
-                    option.value = marca.id;
-                    option.textContent = `${marca.nombre} (ID: ${marca.id})`;
-                    select.appendChild(option);
-                });
-                
-                resultado.className = "success";
-                resultado.textContent = `✅ ${marcas.length} marcas cargadas correctamente`;
-            } catch (err) {
-                const resultado = document.getElementById("resultado");
-                resultado.className = "error";
-                resultado.textContent = "❌ Error al cargar marcas";
-                console.error("Error:", err);
-            }
-        }
+// 2. GET MARCA POR ID
+app.get("/api/marcas/:id", (req, res) => {
+  const id = req.params.id;
+  console.log(`🔍 GET /api/marcas/${id}`);
+  
+  const sql = "SELECT id_marca AS id, nom_marca AS nombre FROM marcas WHERE id_marca = ?";
+  db.query(sql, [id], (err, rows) => {
+    if (err) {
+      console.error("❌ Error en GET por ID:", err);
+      return res.status(500).json({ error: "Error al obtener marca" });
+    }
+    
+    if (rows.length === 0) {
+      return res.status(404).json({ error: "Marca no encontrada" });
+    }
+    
+    console.log(`✅ GET por ID:`, rows[0]);
+    res.json(rows[0]);
+  });
+});
 
-        async function crearMarca() {
-            const nombre = document.getElementById("marcaInput").value.trim();
-            const resultado = document.getElementById("resultado");
-            
-            if (!nombre) {
-                resultado.className = "error";
-                resultado.textContent = "❌ Escribe un nombre para la marca";
-                return;
-            }
+// 3. POST CREAR MARCA
+app.post("/api/marcas", (req, res) => {
+  console.log('📨 POST /api/marcas - Body:', req.body);
+  
+  let { nombre } = req.body;
+  
+  if (!nombre) {
+    return res.status(400).json({ error: "El nombre es requerido" });
+  }
+  
+  nombre = String(nombre).trim();
+  
+  const sql = "INSERT INTO marcas (nom_marca) VALUES (?)";
+  db.query(sql, [nombre], (err, result) => {
+    if (err) {
+      console.error("❌ Error en POST:", err);
+      return res.status(500).json({ error: "Error en base de datos" });
+    }
+    
+    console.log(`✅ POST: Marca creada ID: ${result.insertId}`);
+    res.json({ 
+      id: result.insertId, 
+      nombre: nombre
+    });
+  });
+});
 
-            try {
-                resultado.className = "info";
-                resultado.textContent = "🔄 Creando marca...";
-                
-                const res = await fetch(API_URL, {
-                    method: "POST",
-                    headers: { "Content-Type": "application/json" },
-                    body: JSON.stringify({ nombre })
-                });
+// 4. PUT ACTUALIZAR MARCA
+app.put("/api/marcas/:id", (req, res) => {
+  const id = req.params.id;
+  console.log(`✏️ PUT /api/marcas/${id} - Body:`, req.body);
+  
+  let { nombre } = req.body;
+  
+  if (!nombre) {
+    return res.status(400).json({ error: "Nombre es requerido" });
+  }
+  
+  nombre = String(nombre).trim();
+  
+  const sql = "UPDATE marcas SET nom_marca = ? WHERE id_marca = ?";
+  db.query(sql, [nombre, id], (err, result) => {
+    if (err) {
+      console.error("❌ Error en PUT:", err);
+      return res.status(500).json({ error: "Error en base de datos" });
+    }
+    
+    if (result.affectedRows === 0) {
+      return res.status(404).json({ error: "Marca no encontrada" });
+    }
+    
+    console.log(`✅ PUT: Marca ${id} actualizada`);
+    res.json({ 
+      id: parseInt(id), 
+      nombre: nombre
+    });
+  });
+});
 
-                const data = await res.json();
-                
-                if (res.ok) {
-                    resultado.className = "success";
-                    resultado.textContent = `✅ Marca creada: "${data.nombre}" (ID: ${data.id})`;
-                    document.getElementById("marcaInput").value = "";
-                    cargarMarcas();
-                } else {
-                    resultado.className = "error";
-                    resultado.textContent = `❌ Error: ${data.error}`;
-                }
-            } catch (err) {
-                resultado.className = "error";
-                resultado.textContent = "❌ Error de conexión con el servidor";
-                console.error("Error:", err);
-            }
-        }
+// 5. DELETE ELIMINAR MARCA
+app.delete("/api/marcas/:id", (req, res) => {
+  const id = req.params.id;
+  console.log(`🗑️ DELETE /api/marcas/${id}`);
 
-        async function actualizarMarca() {
-            const id = document.getElementById("marcaSelect").value;
-            const nombre = document.getElementById("marcaInput").value.trim();
-            const resultado = document.getElementById("resultado");
-            
-            if (!id) {
-                resultado.className = "error";
-                resultado.textContent = "❌ Selecciona una marca para editar";
-                return;
-            }
-            
-            if (!nombre) {
-                resultado.className = "error";
-                resultado.textContent = "❌ Escribe el nuevo nombre";
-                return;
-            }
+  const sql = "DELETE FROM marcas WHERE id_marca = ?";
+  db.query(sql, [id], (err, result) => {
+    if (err) {
+      console.error("❌ Error en DELETE:", err);
+      return res.status(500).json({ error: "Error en base de datos" });
+    }
+    
+    if (result.affectedRows === 0) {
+      return res.status(404).json({ error: "Marca no encontrada" });
+    }
+    
+    console.log(`✅ DELETE: Marca ${id} eliminada`);
+    res.json({ 
+      mensaje: "Marca eliminada correctamente", 
+      id: parseInt(id) 
+    });
+  });
+});
 
-            try {
-                resultado.className = "info";
-                resultado.textContent = "🔄 Actualizando marca...";
-                
-                const res = await fetch(`${API_URL}/${id}`, {
-                    method: "PUT",
-                    headers: { "Content-Type": "application/json" },
-                    body: JSON.stringify({ nombre })
-                });
+// Servir interfaz web
+app.get("/", (req, res) => {
+  res.sendFile(path.join(__dirname, "index.html"));
+});
 
-                const data = await res.json();
-                
-                if (res.ok) {
-                    resultado.className = "success";
-                    resultado.textContent = `✅ Marca actualizada: "${data.nombre}"`;
-                    document.getElementById("marcaInput").value = "";
-                    cargarMarcas();
-                } else {
-                    resultado.className = "error";
-                    resultado.textContent = `❌ Error: ${data.error}`;
-                }
-            } catch (err) {
-                resultado.className = "error";
-                resultado.textContent = "❌ Error de conexión con el servidor";
-                console.error("Error:", err);
-            }
-        }
+// Health check para Render
+app.get("/health", (req, res) => {
+  res.status(200).json({ status: "OK", message: "API funcionando" });
+});
 
-        async function eliminarMarca() {
-            const id = document.getElementById("marcaSelect").value;
-            const resultado = document.getElementById("resultado");
-            
-            if (!id) {
-                resultado.className = "error";
-                resultado.textContent = "❌ Selecciona una marca para eliminar";
-                return;
-            }
-
-            const marcaSeleccionada = document.getElementById("marcaSelect").options[document.getElementById("marcaSelect").selectedIndex].text;
-            
-            if (!confirm(`¿Estás seguro de eliminar la marca:\n"${marcaSeleccionada}"?`)) {
-                return;
-            }
-
-            try {
-                resultado.className = "info";
-                resultado.textContent = "🔄 Eliminando marca...";
-                
-                const res = await fetch(`${API_URL}/${id}`, { 
-                    method: "DELETE" 
-                });
-                
-                const data = await res.json();
-                
-                if (res.ok) {
-                    resultado.className = "success";
-                    resultado.textContent = `✅ ${data.mensaje}`;
-                    document.getElementById("marcaInput").value = "";
-                    cargarMarcas();
-                } else {
-                    resultado.className = "error";
-                    resultado.textContent = `❌ Error: ${data.error}`;
-                }
-            } catch (err) {
-                resultado.className = "error";
-                resultado.textContent = "❌ Error de conexión con el servidor";
-                console.error("Error:", err);
-            }
-        }
-    </script>
-</body>
-</html>
+// Iniciar servidor
+const PORT = process.env.PORT || 3000;
+app.listen(PORT, '0.0.0.0', () => {
+  console.log(`🚀 Servidor corriendo en puerto ${PORT}`);
+  console.log(`📊 Endpoints disponibles:`);
+  console.log(`   GET    /api/marcas`);
+  console.log(`   GET    /api/marcas/:id`);
+  console.log(`   POST   /api/marcas`);
+  console.log(`   PUT    /api/marcas/:id`);
+  console.log(`   DELETE /api/marcas/:id`);
+});
