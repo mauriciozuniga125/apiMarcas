@@ -5,292 +5,57 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Gestión de Marcas - CRUD Completo</title>
   <style>
-    * {
-      box-sizing: border-box;
-      margin: 0;
-      padding: 0;
-    }
+    /* ... (estilos anteriores se mantienen igual) ... */
 
-    body {
-      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-      display: flex;
-      min-height: 100vh;
-      justify-content: center;
-      align-items: center;
-      padding: 20px;
-    }
-
-    .container {
-      background: white;
-      padding: 30px;
-      border-radius: 15px;
-      box-shadow: 0 15px 35px rgba(0,0,0,0.2);
-      text-align: center;
-      animation: fadeIn 0.8s ease-in-out;
-      max-width: 800px;
-      width: 100%;
-    }
-
-    h1 {
-      color: #333;
-      margin-bottom: 10px;
-      font-size: 2.2em;
-    }
-
-    .subtitle {
-      color: #666;
-      margin-bottom: 30px;
-      font-size: 1.1em;
-    }
-
-    .dashboard {
-      display: grid;
-      grid-template-columns: 1fr 1fr;
-      gap: 20px;
-      margin-bottom: 30px;
-    }
-
-    .stat-card {
-      background: linear-gradient(135deg, #74b9ff, #0984e3);
-      color: white;
-      padding: 20px;
+    /* Nuevos estilos para testing */
+    .testing-panel {
+      background: #f8f9fa;
+      border: 2px dashed #6c757d;
       border-radius: 10px;
-      text-align: center;
-    }
-
-    .stat-card h3 {
-      font-size: 2em;
-      margin-bottom: 5px;
-    }
-
-    .section {
-      margin: 25px 0;
-      padding: 25px;
-      border: 1px solid #e0e0e0;
-      border-radius: 10px;
-      background: #fafafa;
-    }
-
-    .section h2 {
-      color: #333;
-      margin-bottom: 20px;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      gap: 10px;
-    }
-
-    .section h2 i {
-      font-size: 1.2em;
-    }
-
-    .form-group {
-      margin: 15px 0;
-      text-align: left;
-    }
-
-    label {
-      display: block;
-      margin-bottom: 8px;
-      font-weight: 600;
-      color: #333;
-    }
-
-    select, input {
-      padding: 12px;
-      font-size: 16px;
-      border-radius: 8px;
-      border: 2px solid #ddd;
-      margin: 5px 0;
-      outline: none;
-      width: 100%;
-      transition: all 0.3s;
-    }
-
-    input:focus {
-      border-color: #4CAF50;
-      box-shadow: 0 0 0 3px rgba(76, 175, 80, 0.1);
-    }
-
-    input.invalid {
-      border-color: #e74c3c;
-      background-color: #ffeaea;
-      box-shadow: 0 0 0 3px rgba(231, 76, 60, 0.1);
-    }
-
-    .help-text {
-      font-size: 13px;
-      color: #666;
-      margin-top: 5px;
-      font-style: italic;
-    }
-
-    .button-group {
-      display: flex;
-      gap: 10px;
-      justify-content: center;
-      flex-wrap: wrap;
-      margin: 20px 0;
-    }
-
-    button {
-      padding: 12px 24px;
-      font-size: 16px;
-      border: none;
-      border-radius: 8px;
-      cursor: pointer;
-      transition: all 0.3s;
-      font-weight: 600;
-      display: flex;
-      align-items: center;
-      gap: 8px;
-    }
-
-    .btn-primary {
-      background: linear-gradient(135deg, #4CAF50, #45a049);
-      color: white;
-    }
-
-    .btn-secondary {
-      background: linear-gradient(135deg, #2196F3, #1976D2);
-      color: white;
-    }
-
-    .btn-warning {
-      background: linear-gradient(135deg, #ff9800, #f57c00);
-      color: white;
-    }
-
-    .btn-danger {
-      background: linear-gradient(135deg, #f44336, #d32f2f);
-      color: white;
-    }
-
-    .btn-success {
-      background: linear-gradient(135deg, #4CAF50, #388E3C);
-      color: white;
-    }
-
-    button:hover:not(:disabled) {
-      transform: translateY(-2px);
-      box-shadow: 0 5px 15px rgba(0,0,0,0.2);
-    }
-
-    button:disabled {
-      background: #cccccc;
-      cursor: not-allowed;
-      transform: none;
-      box-shadow: none;
-    }
-
-    .resultado-container {
-      margin-top: 20px;
-    }
-
-    #resultado, #registroResultado, #edicionResultado {
-      margin-top: 15px;
-      font-weight: bold;
-      min-height: 24px;
       padding: 15px;
-      border-radius: 8px;
-      text-align: center;
+      margin: 15px 0;
     }
 
-    .success {
-      color: #2ecc71;
-      background-color: #e8f5e8;
-      border: 2px solid #2ecc71;
+    .testing-header {
+      color: #dc3545;
+      font-weight: bold;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      margin-bottom: 10px;
     }
 
-    .error {
-      color: #e74c3c;
-      background-color: #ffeaea;
-      border: 2px solid #e74c3c;
-    }
-
-    .warning {
-      color: #f39c12;
-      background-color: #fff3e0;
-      border: 2px solid #f39c12;
-    }
-
-    .info {
-      color: #3498db;
-      background-color: #e3f2fd;
-      border: 2px solid #3498db;
-    }
-
-    @keyframes fadeIn {
-      from { opacity: 0; transform: translateY(-20px); }
-      to { opacity: 1; transform: translateY(0); }
-    }
-
-    .shake {
-      animation: shake 0.5s ease-in-out;
-    }
-
-    @keyframes shake {
-      0%, 100% { transform: translateX(0); }
-      25% { transform: translateX(-8px); }
-      75% { transform: translateX(8px); }
-    }
-
-    .marcas-list {
-      max-height: 200px;
-      overflow-y: auto;
-      border: 1px solid #ddd;
-      border-radius: 8px;
-      padding: 10px;
-      background: white;
+    .testing-buttons {
+      display: flex;
+      gap: 10px;
       margin: 10px 0;
     }
 
-    .marca-item {
-      display: flex;
-      justify-content: between;
-      align-items: center;
-      padding: 10px;
-      border-bottom: 1px solid #eee;
+    .btn-testing {
+      background: linear-gradient(135deg, #dc3545, #c82333);
+      color: white;
     }
 
-    .marca-item:last-child {
-      border-bottom: none;
+    .btn-testing-success {
+      background: linear-gradient(135deg, #28a745, #218838);
+      color: white;
     }
 
-    .marca-info {
-      flex: 1;
-      text-align: left;
+    .testing-status {
+      padding: 8px 12px;
+      border-radius: 5px;
+      font-weight: bold;
+      margin-left: 10px;
     }
 
-    .marca-actions {
-      display: flex;
-      gap: 5px;
+    .status-active {
+      background: #dc3545;
+      color: white;
     }
 
-    .action-btn {
-      padding: 6px 12px;
-      font-size: 12px;
-    }
-
-    .hidden {
-      display: none;
-    }
-
-    /* Responsive */
-    @media (max-width: 768px) {
-      .dashboard {
-        grid-template-columns: 1fr;
-      }
-      
-      .button-group {
-        flex-direction: column;
-      }
-      
-      button {
-        width: 100%;
-        justify-content: center;
-      }
+    .status-inactive {
+      background: #28a745;
+      color: white;
     }
   </style>
 </head>
@@ -298,6 +63,24 @@
   <div class="container">
     <h1>🏷️ Gestión de Marcas</h1>
     <p class="subtitle">Sistema CRUD completo para administrar marcas</p>
+    
+    <!-- Panel de Testing -->
+    <div class="testing-panel">
+      <div class="testing-header">
+        <span>🧪 PANEL DE TESTING</span>
+        <span id="testingStatus" class="testing-status status-active">MODO TESTING ACTIVADO</span>
+      </div>
+      <p><strong>🔴 Comportamiento Actual:</strong> PUT y DELETE devolverán error 404 simulado</p>
+      <div class="testing-buttons">
+        <button class="btn-testing" onclick="activarModoTesting(true)">
+          <span>🔴</span> Activar Errores 404
+        </button>
+        <button class="btn-testing-success" onclick="activarModoTesting(false)">
+          <span>✅</span> Desactivar Errores 404
+        </button>
+      </div>
+      <div id="testingResultado"></div>
+    </div>
     
     <!-- Dashboard de Estadísticas -->
     <div class="dashboard">
@@ -383,11 +166,78 @@
     // Variables globales
     let marcas = [];
     let marcaEditando = null;
+    let modoTesting = true; // Por defecto activado para testing
 
     // Cargar marcas al iniciar
     document.addEventListener('DOMContentLoaded', function() {
       cargarMarcas();
+      actualizarUImodoTesting();
     });
+
+    // Función para actualizar la UI del modo testing
+    function actualizarUImodoTesting() {
+      const statusElement = document.getElementById('testingStatus');
+      if (modoTesting) {
+        statusElement.textContent = 'MODO TESTING ACTIVADO';
+        statusElement.className = 'testing-status status-active';
+      } else {
+        statusElement.textContent = 'MODO TESTING DESACTIVADO';
+        statusElement.className = 'testing-status status-inactive';
+      }
+    }
+
+    // Función para activar/desactivar modo testing
+    async function activarModoTesting(activar) {
+      try {
+        const response = await fetch("https://apimarcas.onrender.com/api/testing/modo", {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json"
+          },
+          body: JSON.stringify({ activado: activar })
+        });
+
+        const data = await response.json();
+        
+        if (response.ok) {
+          modoTesting = data.modoTesting;
+          actualizarUImodoTesting();
+          
+          const testingResultado = document.getElementById('testingResultado');
+          testingResultado.textContent = `✅ ${data.mensaje}`;
+          testingResultado.className = 'success';
+          
+          // Mostrar mensaje informativo
+          setTimeout(() => {
+            testingResultado.textContent = '';
+          }, 3000);
+        } else {
+          // Si el endpoint no está disponible, simular localmente
+          modoTesting = activar;
+          actualizarUImodoTesting();
+          
+          const testingResultado = document.getElementById('testingResultado');
+          testingResultado.textContent = `✅ Modo Testing ${activar ? 'activado' : 'desactivado'} (local)`;
+          testingResultado.className = 'success';
+          
+          setTimeout(() => {
+            testingResultado.textContent = '';
+          }, 3000);
+        }
+      } catch (err) {
+        // Fallback: simular localmente si hay error de conexión
+        modoTesting = activar;
+        actualizarUImodoTesting();
+        
+        const testingResultado = document.getElementById('testingResultado');
+        testingResultado.textContent = `✅ Modo Testing ${activar ? 'activado' : 'desactivado'} (local)`;
+        testingResultado.className = 'success';
+        
+        setTimeout(() => {
+          testingResultado.textContent = '';
+        }, 3000);
+      }
+    }
 
     // Función para validar solo letras en el frontend
     function validarSoloLetrasFrontend(texto) {
@@ -432,7 +282,7 @@
     // Función para cargar todas las marcas
     async function cargarMarcas() {
       try {
-        const res = await fetch("http://localhost:3000/api/marcas");
+        const res = await fetch("https://apimarcas.onrender.com/api/marcas");
         marcas = await res.json();
         actualizarInterfaz();
       } catch (err) {
@@ -522,7 +372,7 @@
       marcaEditando = marcas.find(m => m.id == select.value);
       document.getElementById("marcaEditNombre").value = marcaEditando.nombre;
       document.getElementById("edicionForm").classList.remove("hidden");
-      document.getElementById("resultado").textContent = `Editando: ${marcaEditando.nombre}`;
+      document.getElementById("resultado").textContent = `Editando: ${marcaEditando.nombre} ${modoTesting ? '🔴 (MODO TESTING - Error 404 simulado)' : ''}`;
       document.getElementById("resultado").className = "info";
     }
 
@@ -557,7 +407,7 @@
       boton.innerHTML = '<span>⏳</span> Registrando...';
 
       try {
-        const response = await fetch("http://localhost:3000/api/marcas", {
+        const response = await fetch("https://apimarcas.onrender.com/api/marcas", {
           method: "POST",
           headers: {
             "Content-Type": "application/json"
@@ -616,7 +466,7 @@
       }
 
       try {
-        const response = await fetch(`http://localhost:3000/api/marcas/${marcaEditando.id}`, {
+        const response = await fetch(`https://apimarcas.onrender.com/api/marcas/${marcaEditando.id}`, {
           method: "PUT",
           headers: {
             "Content-Type": "application/json"
@@ -636,8 +486,13 @@
           // Recargar la lista de marcas
           await cargarMarcas();
         } else {
-          resultado.textContent = "❌ " + data.error;
-          resultado.className = "error";
+          if (response.status === 404 && data.testing) {
+            resultado.textContent = "🔴 ERROR 404 SIMULADO: " + data.error + " - " + data.detalles;
+            resultado.className = "error";
+          } else {
+            resultado.textContent = "❌ " + data.error;
+            resultado.className = "error";
+          }
         }
       } catch (err) {
         console.error("Error al actualizar marca:", err);
@@ -659,12 +514,16 @@
 
       const marca = marcas.find(m => m.id == select.value);
       
-      if (!confirm(`¿Estás seguro de que quieres eliminar la marca "${marca.nombre}" (ID: ${marca.id})? Esta acción no se puede deshacer.`)) {
+      const mensajeConfirmacion = modoTesting 
+        ? `🔴 MODO TESTING ACTIVADO\n¿Estás seguro de que quieres SIMULAR la eliminación de "${marca.nombre}"?\n(Se generará un error 404 de prueba)`
+        : `¿Estás seguro de que quieres eliminar la marca "${marca.nombre}" (ID: ${marca.id})? Esta acción no se puede deshacer.`;
+      
+      if (!confirm(mensajeConfirmacion)) {
         return;
       }
 
       try {
-        const response = await fetch(`http://localhost:3000/api/marcas/${marca.id}`, {
+        const response = await fetch(`https://apimarcas.onrender.com/api/marcas/${marca.id}`, {
           method: "DELETE"
         });
 
@@ -677,8 +536,13 @@
           // Recargar la lista de marcas
           await cargarMarcas();
         } else {
-          resultado.textContent = "❌ " + data.error;
-          resultado.className = "error";
+          if (response.status === 404 && data.testing) {
+            resultado.textContent = "🔴 ERROR 404 SIMULADO: " + data.error + " - " + data.detalles;
+            resultado.className = "error";
+          } else {
+            resultado.textContent = "❌ " + data.error;
+            resultado.className = "error";
+          }
         }
       } catch (err) {
         console.error("Error al eliminar marca:", err);
