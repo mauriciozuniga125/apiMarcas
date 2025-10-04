@@ -30,7 +30,7 @@ app.get("/", (req, res) => {
   res.sendFile(path.join(__dirname, "index.html"));
 });
 
-// ✅ Endpoint para marcas
+// ✅ Endpoint GET para obtener marcas
 app.get("/api/marcas", (req, res) => {
   db.query("SELECT id_marca AS id, nom_marca AS nombre FROM marcas", (err, rows) => {
     if (err) {
@@ -38,6 +38,43 @@ app.get("/api/marcas", (req, res) => {
       return res.status(500).json({ error: "Error al obtener marcas" });
     }
     res.json(rows);
+  });
+});
+
+// ✅ Endpoint POST para registrar nueva marca
+app.post("/api/marcas", (req, res) => {
+  const { nombre } = req.body;
+
+  // Validar que se envió el nombre
+  if (!nombre) {
+    return res.status(400).json({ error: "El nombre de la marca es requerido" });
+  }
+
+  // Primero obtenemos el máximo ID actual para incrementarlo
+  db.query("SELECT MAX(id_marca) as maxId FROM marcas", (err, results) => {
+    if (err) {
+      console.error(err);
+      return res.status(500).json({ error: "Error al obtener el último ID" });
+    }
+
+    const nuevoId = (results[0].maxId || 0) + 1;
+
+    // Insertar la nueva marca
+    const query = "INSERT INTO marcas (id_marca, nom_marca) VALUES (?, ?)";
+    db.query(query, [nuevoId, nombre], (err, result) => {
+      if (err) {
+        console.error(err);
+        return res.status(500).json({ error: "Error al registrar la marca" });
+      }
+
+      res.status(201).json({
+        mensaje: "Marca registrada con éxito",
+        marca: {
+          id: nuevoId,
+          nombre: nombre
+        }
+      });
+    });
   });
 });
 
