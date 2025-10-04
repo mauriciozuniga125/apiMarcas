@@ -1,580 +1,297 @@
 <!DOCTYPE html>
 <html lang="es">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Gestión de Marcas - CRUD Completo</title>
-  <style>
-    /* ... (estilos anteriores se mantienen igual) ... */
-
-    /* Nuevos estilos para testing */
-    .testing-panel {
-      background: #f8f9fa;
-      border: 2px dashed #6c757d;
-      border-radius: 10px;
-      padding: 15px;
-      margin: 15px 0;
-    }
-
-    .testing-header {
-      color: #dc3545;
-      font-weight: bold;
-      display: flex;
-      align-items: center;
-      gap: 10px;
-      margin-bottom: 10px;
-    }
-
-    .testing-buttons {
-      display: flex;
-      gap: 10px;
-      margin: 10px 0;
-    }
-
-    .btn-testing {
-      background: linear-gradient(135deg, #dc3545, #c82333);
-      color: white;
-    }
-
-    .btn-testing-success {
-      background: linear-gradient(135deg, #28a745, #218838);
-      color: white;
-    }
-
-    .testing-status {
-      padding: 8px 12px;
-      border-radius: 5px;
-      font-weight: bold;
-      margin-left: 10px;
-    }
-
-    .status-active {
-      background: #dc3545;
-      color: white;
-    }
-
-    .status-inactive {
-      background: #28a745;
-      color: white;
-    }
-  </style>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Gestión de Marcas</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        body {
+            font-family: Arial, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            display: flex;
+            height: 100vh;
+            justify-content: center;
+            align-items: center;
+        }
+        .container {
+            background: white;
+            padding: 30px;
+            border-radius: 15px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.3);
+            text-align: center;
+            width: 450px;
+        }
+        h1 {
+            color: #333;
+            margin-bottom: 25px;
+            font-size: 28px;
+        }
+        select, input {
+            padding: 12px;
+            font-size: 16px;
+            border-radius: 8px;
+            border: 2px solid #ddd;
+            margin: 10px 0;
+            width: 100%;
+            transition: border 0.3s;
+        }
+        select:focus, input:focus {
+            border-color: #667eea;
+            outline: none;
+        }
+        .buttons {
+            display: flex;
+            gap: 10px;
+            margin: 20px 0;
+        }
+        button {
+            padding: 12px 20px;
+            font-size: 16px;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            color: white;
+            flex: 1;
+            transition: all 0.3s;
+            font-weight: bold;
+        }
+        button:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(0,0,0,0.2);
+        }
+        #crear {
+            background: #28a745;
+        }
+        #crear:hover {
+            background: #218838;
+        }
+        #editar {
+            background: #007bff;
+        }
+        #editar:hover {
+            background: #0056b3;
+        }
+        #eliminar {
+            background: #dc3545;
+        }
+        #eliminar:hover {
+            background: #c82333;
+        }
+        #resultado {
+            margin-top: 20px;
+            padding: 15px;
+            border-radius: 8px;
+            font-weight: bold;
+            min-height: 50px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background: #f8f9fa;
+            border: 2px dashed #dee2e6;
+        }
+        .success {
+            background: #d4edda !important;
+            border-color: #c3e6cb !important;
+            color: #155724;
+        }
+        .error {
+            background: #f8d7da !important;
+            border-color: #f5c6cb !important;
+            color: #721c24;
+        }
+        .info {
+            background: #cce7ff !important;
+            border-color: #b3d9ff !important;
+            color: #004085;
+        }
+    </style>
 </head>
 <body>
-  <div class="container">
-    <h1>🏷️ Gestión de Marcas</h1>
-    <p class="subtitle">Sistema CRUD completo para administrar marcas</p>
-    
-    <!-- Panel de Testing -->
-    <div class="testing-panel">
-      <div class="testing-header">
-        <span>🧪 PANEL DE TESTING</span>
-        <span id="testingStatus" class="testing-status status-active">MODO TESTING ACTIVADO</span>
-      </div>
-      <p><strong>🔴 Comportamiento Actual:</strong> PUT y DELETE devolverán error 404 simulado</p>
-      <div class="testing-buttons">
-        <button class="btn-testing" onclick="activarModoTesting(true)">
-          <span>🔴</span> Activar Errores 404
-        </button>
-        <button class="btn-testing-success" onclick="activarModoTesting(false)">
-          <span>✅</span> Desactivar Errores 404
-        </button>
-      </div>
-      <div id="testingResultado"></div>
-    </div>
-    
-    <!-- Dashboard de Estadísticas -->
-    <div class="dashboard">
-      <div class="stat-card">
-        <h3 id="totalMarcas">0</h3>
-        <p>Marcas Totales</p>
-      </div>
-      <div class="stat-card">
-        <h3 id="ultimaMarca">-</h3>
-        <p>Última Marca</p>
-      </div>
-    </div>
-    
-    <!-- Sección para registrar nueva marca -->
-    <div class="section">
-      <h2>📝 Registrar Nueva Marca</h2>
-      <div class="form-group">
-        <input type="text" id="nuevaMarca" placeholder="Ingresa el nombre de la nueva marca" maxlength="50">
-        <div class="help-text">Solo se permiten letras y espacios. No se aceptan números ni caracteres especiales.</div>
-      </div>
-      <button class="btn-primary" id="btnRegistrar" onclick="registrarMarca()">
-        <span>➕</span> Registrar Marca
-      </button>
-      <div id="registroResultado"></div>
-    </div>
+    <div class="container">
+        <h1>🏷️ Gestión de Marcas</h1>
 
-    <!-- Sección para gestionar marcas existentes -->
-    <div class="section">
-      <h2>🔍 Gestionar Marcas Existentes</h2>
-      <div class="form-group">
-        <label for="marcaSelect">Seleccionar Marca:</label>
         <select id="marcaSelect">
-          <option value="">Cargando marcas...</option>
+            <option value="">-- Selecciona una marca --</option>
         </select>
-      </div>
-      
-      <div class="button-group">
-        <button class="btn-secondary" onclick="mostrarMarca()">
-          <span>👁️</span> Ver Detalles
-        </button>
-        <button class="btn-warning" onclick="habilitarEdicion()" id="btnEditar">
-          <span>✏️</span> Editar
-        </button>
-        <button class="btn-danger" onclick="eliminarMarca()" id="btnEliminar">
-          <span>🗑️</span> Eliminar
-        </button>
-      </div>
+        
+        <input type="text" id="marcaInput" placeholder="Escribe el nombre de la marca...">
 
-      <!-- Formulario de edición (oculto inicialmente) -->
-      <div id="edicionForm" class="hidden">
-        <div class="form-group">
-          <label for="marcaEditNombre">Nuevo Nombre:</label>
-          <input type="text" id="marcaEditNombre" placeholder="Nuevo nombre de la marca" maxlength="50">
-          <div class="help-text">Solo letras y espacios permitidos</div>
+        <div class="buttons">
+            <button id="crear" onclick="crearMarca()">➕ Crear</button>
+            <button id="editar" onclick="actualizarMarca()">✏️ Editar</button>
+            <button id="eliminar" onclick="eliminarMarca()">🗑️ Eliminar</button>
         </div>
-        <div class="button-group">
-          <button class="btn-success" onclick="actualizarMarca()">
-            <span>💾</span> Guardar Cambios
-          </button>
-          <button class="btn-secondary" onclick="cancelarEdicion()">
-            <span>❌</span> Cancelar
-          </button>
-        </div>
-      </div>
 
-      <div id="resultado"></div>
-      <div id="edicionResultado"></div>
+        <div id="resultado" class="info">
+            Esperando acción...
+        </div>
     </div>
 
-    <!-- Lista de todas las marcas -->
-    <div class="section">
-      <h2>📋 Lista Completa de Marcas</h2>
-      <div class="marcas-list" id="listaMarcas">
-        Cargando marcas...
-      </div>
-      <button class="btn-secondary" onclick="cargarMarcas()">
-        <span>🔄</span> Actualizar Lista
-      </button>
-    </div>
-  </div>
+    <script>
+        const API_URL = "http://localhost:3000/api/marcas";
 
-  <script>
-    // Variables globales
-    let marcas = [];
-    let marcaEditando = null;
-    let modoTesting = true; // Por defecto activado para testing
+        // Cargar marcas al iniciar
+        document.addEventListener('DOMContentLoaded', cargarMarcas);
 
-    // Cargar marcas al iniciar
-    document.addEventListener('DOMContentLoaded', function() {
-      cargarMarcas();
-      actualizarUImodoTesting();
-    });
-
-    // Función para actualizar la UI del modo testing
-    function actualizarUImodoTesting() {
-      const statusElement = document.getElementById('testingStatus');
-      if (modoTesting) {
-        statusElement.textContent = 'MODO TESTING ACTIVADO';
-        statusElement.className = 'testing-status status-active';
-      } else {
-        statusElement.textContent = 'MODO TESTING DESACTIVADO';
-        statusElement.className = 'testing-status status-inactive';
-      }
-    }
-
-    // Función para activar/desactivar modo testing
-    async function activarModoTesting(activar) {
-      try {
-        const response = await fetch("https://apimarcas.onrender.com/api/testing/modo", {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json"
-          },
-          body: JSON.stringify({ activado: activar })
-        });
-
-        const data = await response.json();
-        
-        if (response.ok) {
-          modoTesting = data.modoTesting;
-          actualizarUImodoTesting();
-          
-          const testingResultado = document.getElementById('testingResultado');
-          testingResultado.textContent = `✅ ${data.mensaje}`;
-          testingResultado.className = 'success';
-          
-          // Mostrar mensaje informativo
-          setTimeout(() => {
-            testingResultado.textContent = '';
-          }, 3000);
-        } else {
-          // Si el endpoint no está disponible, simular localmente
-          modoTesting = activar;
-          actualizarUImodoTesting();
-          
-          const testingResultado = document.getElementById('testingResultado');
-          testingResultado.textContent = `✅ Modo Testing ${activar ? 'activado' : 'desactivado'} (local)`;
-          testingResultado.className = 'success';
-          
-          setTimeout(() => {
-            testingResultado.textContent = '';
-          }, 3000);
+        async function cargarMarcas() {
+            try {
+                const resultado = document.getElementById("resultado");
+                resultado.className = "info";
+                resultado.textContent = "🔄 Cargando marcas...";
+                
+                const res = await fetch(API_URL);
+                if (!res.ok) throw new Error('Error en la respuesta');
+                
+                const marcas = await res.json();
+                const select = document.getElementById("marcaSelect");
+                select.innerHTML = "<option value=''>-- Selecciona una marca --</option>";
+                
+                marcas.forEach(marca => {
+                    const option = document.createElement("option");
+                    option.value = marca.id;
+                    option.textContent = `${marca.nombre} (ID: ${marca.id})`;
+                    select.appendChild(option);
+                });
+                
+                resultado.className = "success";
+                resultado.textContent = `✅ ${marcas.length} marcas cargadas correctamente`;
+            } catch (err) {
+                const resultado = document.getElementById("resultado");
+                resultado.className = "error";
+                resultado.textContent = "❌ Error al cargar marcas";
+                console.error("Error:", err);
+            }
         }
-      } catch (err) {
-        // Fallback: simular localmente si hay error de conexión
-        modoTesting = activar;
-        actualizarUImodoTesting();
-        
-        const testingResultado = document.getElementById('testingResultado');
-        testingResultado.textContent = `✅ Modo Testing ${activar ? 'activado' : 'desactivado'} (local)`;
-        testingResultado.className = 'success';
-        
-        setTimeout(() => {
-          testingResultado.textContent = '';
-        }, 3000);
-      }
-    }
 
-    // Función para validar solo letras en el frontend
-    function validarSoloLetrasFrontend(texto) {
-      const regex = /^[A-Za-zÁáÉéÍíÓóÚúÑñ\s]+$/;
-      return regex.test(texto);
-    }
+        async function crearMarca() {
+            const nombre = document.getElementById("marcaInput").value.trim();
+            const resultado = document.getElementById("resultado");
+            
+            if (!nombre) {
+                resultado.className = "error";
+                resultado.textContent = "❌ Escribe un nombre para la marca";
+                return;
+            }
 
-    // Función para validar en tiempo real
-    function validarEnTiempoReal() {
-      const input = document.getElementById('nuevaMarca');
-      const boton = document.getElementById('btnRegistrar');
-      const valor = input.value.trim();
-      
-      if (valor === '') {
-        input.classList.remove('invalid');
-        boton.disabled = true;
-        return;
-      }
-      
-      if (!validarSoloLetrasFrontend(valor)) {
-        input.classList.add('invalid');
-        boton.disabled = true;
-        
-        // Mostrar mensaje temporal
-        const resultado = document.getElementById('registroResultado');
-        resultado.textContent = '❌ Solo se permiten letras. No se aceptan números ni caracteres especiales.';
-        resultado.className = 'error';
-        
-        // Agregar animación de shake
-        input.classList.add('shake');
-        setTimeout(() => {
-          input.classList.remove('shake');
-        }, 500);
-        
-      } else {
-        input.classList.remove('invalid');
-        boton.disabled = false;
-        document.getElementById('registroResultado').textContent = '';
-      }
-    }
+            try {
+                resultado.className = "info";
+                resultado.textContent = "🔄 Creando marca...";
+                
+                const res = await fetch(API_URL, {
+                    method: "POST",
+                    headers: { "Content-Type": "application/json" },
+                    body: JSON.stringify({ nombre })
+                });
 
-    // Función para cargar todas las marcas
-    async function cargarMarcas() {
-      try {
-        const res = await fetch("https://apimarcas.onrender.com/api/marcas");
-        marcas = await res.json();
-        actualizarInterfaz();
-      } catch (err) {
-        console.error("Error al cargar marcas", err);
-        mostrarError("registroResultado", "Error al cargar las marcas");
-      }
-    }
-
-    // Función para actualizar toda la interfaz
-    function actualizarInterfaz() {
-      actualizarSelectMarcas();
-      actualizarListaMarcas();
-      actualizarEstadisticas();
-    }
-
-    // Actualizar el dropdown de selección
-    function actualizarSelectMarcas() {
-      const select = document.getElementById("marcaSelect");
-      select.innerHTML = "<option value=''>-- Selecciona una marca --</option>";
-
-      marcas.forEach(marca => {
-        const option = document.createElement("option");
-        option.value = marca.id;
-        option.textContent = `${marca.id} - ${marca.nombre}`;
-        select.appendChild(option);
-      });
-    }
-
-    // Actualizar la lista visual de marcas
-    function actualizarListaMarcas() {
-      const lista = document.getElementById("listaMarcas");
-      
-      if (marcas.length === 0) {
-        lista.innerHTML = '<div class="marca-item">No hay marcas registradas</div>';
-        return;
-      }
-
-      lista.innerHTML = '';
-      marcas.forEach(marca => {
-        const item = document.createElement("div");
-        item.className = "marca-item";
-        item.innerHTML = `
-          <div class="marca-info">
-            <strong>ID: ${marca.id}</strong> - ${marca.nombre}
-          </div>
-        `;
-        lista.appendChild(item);
-      });
-    }
-
-    // Actualizar estadísticas del dashboard
-    function actualizarEstadisticas() {
-      document.getElementById("totalMarcas").textContent = marcas.length;
-      
-      if (marcas.length > 0) {
-        const ultimaMarca = marcas[marcas.length - 1];
-        document.getElementById("ultimaMarca").textContent = ultimaMarca.nombre;
-      } else {
-        document.getElementById("ultimaMarca").textContent = "-";
-      }
-    }
-
-    // Mostrar detalles de la marca seleccionada
-    function mostrarMarca() {
-      const select = document.getElementById("marcaSelect");
-      const resultado = document.getElementById("resultado");
-      
-      if (select.value) {
-        const marca = marcas.find(m => m.id == select.value);
-        resultado.textContent = `✅ ID: ${marca.id} | Nombre: ${marca.nombre}`;
-        resultado.className = "success";
-      } else {
-        resultado.textContent = "⚠️ No has seleccionado ninguna marca.";
-        resultado.className = "warning";
-      }
-    }
-
-    // Habilitar formulario de edición
-    function habilitarEdicion() {
-      const select = document.getElementById("marcaSelect");
-      
-      if (!select.value) {
-        mostrarError("edicionResultado", "Por favor, selecciona una marca para editar.");
-        return;
-      }
-
-      marcaEditando = marcas.find(m => m.id == select.value);
-      document.getElementById("marcaEditNombre").value = marcaEditando.nombre;
-      document.getElementById("edicionForm").classList.remove("hidden");
-      document.getElementById("resultado").textContent = `Editando: ${marcaEditando.nombre} ${modoTesting ? '🔴 (MODO TESTING - Error 404 simulado)' : ''}`;
-      document.getElementById("resultado").className = "info";
-    }
-
-    // Cancelar edición
-    function cancelarEdicion() {
-      document.getElementById("edicionForm").classList.add("hidden");
-      marcaEditando = null;
-      document.getElementById("edicionResultado").textContent = "";
-    }
-
-    // Registrar nueva marca
-    async function registrarMarca() {
-      const nombreMarca = document.getElementById("nuevaMarca").value.trim();
-      const resultado = document.getElementById("registroResultado");
-      const boton = document.getElementById("btnRegistrar");
-
-      if (!nombreMarca) {
-        resultado.textContent = "⚠️ Por favor, ingresa un nombre para la marca.";
-        resultado.className = "warning";
-        return;
-      }
-
-      // Validación final en el frontend
-      if (!validarSoloLetrasFrontend(nombreMarca)) {
-        resultado.textContent = "❌ El nombre de la marca solo debe contener letras y espacios.";
-        resultado.className = "error";
-        return;
-      }
-
-      // Deshabilitar botón durante el envío
-      boton.disabled = true;
-      boton.innerHTML = '<span>⏳</span> Registrando...';
-
-      try {
-        const response = await fetch("https://apimarcas.onrender.com/api/marcas", {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json"
-          },
-          body: JSON.stringify({ nombre: nombreMarca })
-        });
-
-        const data = await response.json();
-
-        if (response.ok) {
-          resultado.textContent = "✅ " + data.mensaje + " - ID: " + data.marca.id + " - Marca: " + data.marca.nombre;
-          resultado.className = "success";
-          
-          // Limpiar el campo de entrada
-          document.getElementById("nuevaMarca").value = "";
-          
-          // Recargar la lista de marcas
-          await cargarMarcas();
-        } else {
-          resultado.textContent = "❌ " + data.error;
-          resultado.className = "error";
+                const data = await res.json();
+                
+                if (res.ok) {
+                    resultado.className = "success";
+                    resultado.textContent = `✅ Marca creada: "${data.nombre}" (ID: ${data.id})`;
+                    document.getElementById("marcaInput").value = "";
+                    cargarMarcas();
+                } else {
+                    resultado.className = "error";
+                    resultado.textContent = `❌ Error: ${data.error}`;
+                }
+            } catch (err) {
+                resultado.className = "error";
+                resultado.textContent = "❌ Error de conexión con el servidor";
+                console.error("Error:", err);
+            }
         }
-      } catch (err) {
-        console.error("Error al registrar marca:", err);
-        resultado.textContent = "❌ Error al conectar con el servidor";
-        resultado.className = "error";
-      } finally {
-        // Rehabilitar botón
-        boton.disabled = false;
-        boton.innerHTML = '<span>➕</span> Registrar Marca';
-      }
-    }
 
-    // Actualizar marca existente
-    async function actualizarMarca() {
-      const nuevoNombre = document.getElementById("marcaEditNombre").value.trim();
-      const resultado = document.getElementById("edicionResultado");
+        async function actualizarMarca() {
+            const id = document.getElementById("marcaSelect").value;
+            const nombre = document.getElementById("marcaInput").value.trim();
+            const resultado = document.getElementById("resultado");
+            
+            if (!id) {
+                resultado.className = "error";
+                resultado.textContent = "❌ Selecciona una marca para editar";
+                return;
+            }
+            
+            if (!nombre) {
+                resultado.className = "error";
+                resultado.textContent = "❌ Escribe el nuevo nombre";
+                return;
+            }
 
-      if (!marcaEditando) {
-        resultado.textContent = "❌ No hay marca seleccionada para editar.";
-        resultado.className = "error";
-        return;
-      }
+            try {
+                resultado.className = "info";
+                resultado.textContent = "🔄 Actualizando marca...";
+                
+                const res = await fetch(`${API_URL}/${id}`, {
+                    method: "PUT",
+                    headers: { "Content-Type": "application/json" },
+                    body: JSON.stringify({ nombre })
+                });
 
-      if (!nuevoNombre) {
-        resultado.textContent = "⚠️ Por favor, ingresa un nuevo nombre para la marca.";
-        resultado.className = "warning";
-        return;
-      }
-
-      // Validación final en el frontend
-      if (!validarSoloLetrasFrontend(nuevoNombre)) {
-        resultado.textContent = "❌ El nombre de la marca solo debe contener letras y espacios.";
-        resultado.className = "error";
-        return;
-      }
-
-      try {
-        const response = await fetch(`https://apimarcas.onrender.com/api/marcas/${marcaEditando.id}`, {
-          method: "PUT",
-          headers: {
-            "Content-Type": "application/json"
-          },
-          body: JSON.stringify({ nombre: nuevoNombre })
-        });
-
-        const data = await response.json();
-
-        if (response.ok) {
-          resultado.textContent = "✅ " + data.mensaje + " - Nueva marca: " + data.marca.nombre;
-          resultado.className = "success";
-          
-          // Ocultar formulario de edición
-          cancelarEdicion();
-          
-          // Recargar la lista de marcas
-          await cargarMarcas();
-        } else {
-          if (response.status === 404 && data.testing) {
-            resultado.textContent = "🔴 ERROR 404 SIMULADO: " + data.error + " - " + data.detalles;
-            resultado.className = "error";
-          } else {
-            resultado.textContent = "❌ " + data.error;
-            resultado.className = "error";
-          }
+                const data = await res.json();
+                
+                if (res.ok) {
+                    resultado.className = "success";
+                    resultado.textContent = `✅ Marca actualizada: "${data.nombre}"`;
+                    document.getElementById("marcaInput").value = "";
+                    cargarMarcas();
+                } else {
+                    resultado.className = "error";
+                    resultado.textContent = `❌ Error: ${data.error}`;
+                }
+            } catch (err) {
+                resultado.className = "error";
+                resultado.textContent = "❌ Error de conexión con el servidor";
+                console.error("Error:", err);
+            }
         }
-      } catch (err) {
-        console.error("Error al actualizar marca:", err);
-        resultado.textContent = "❌ Error al conectar con el servidor";
-        resultado.className = "error";
-      }
-    }
 
-    // Eliminar marca
-    async function eliminarMarca() {
-      const select = document.getElementById("marcaSelect");
-      const resultado = document.getElementById("resultado");
-      
-      if (!select.value) {
-        resultado.textContent = "⚠️ Por favor, selecciona una marca para eliminar.";
-        resultado.className = "warning";
-        return;
-      }
+        async function eliminarMarca() {
+            const id = document.getElementById("marcaSelect").value;
+            const resultado = document.getElementById("resultado");
+            
+            if (!id) {
+                resultado.className = "error";
+                resultado.textContent = "❌ Selecciona una marca para eliminar";
+                return;
+            }
 
-      const marca = marcas.find(m => m.id == select.value);
-      
-      const mensajeConfirmacion = modoTesting 
-        ? `🔴 MODO TESTING ACTIVADO\n¿Estás seguro de que quieres SIMULAR la eliminación de "${marca.nombre}"?\n(Se generará un error 404 de prueba)`
-        : `¿Estás seguro de que quieres eliminar la marca "${marca.nombre}" (ID: ${marca.id})? Esta acción no se puede deshacer.`;
-      
-      if (!confirm(mensajeConfirmacion)) {
-        return;
-      }
+            const marcaSeleccionada = document.getElementById("marcaSelect").options[document.getElementById("marcaSelect").selectedIndex].text;
+            
+            if (!confirm(`¿Estás seguro de eliminar la marca:\n"${marcaSeleccionada}"?`)) {
+                return;
+            }
 
-      try {
-        const response = await fetch(`https://apimarcas.onrender.com/api/marcas/${marca.id}`, {
-          method: "DELETE"
-        });
-
-        const data = await response.json();
-
-        if (response.ok) {
-          resultado.textContent = "✅ " + data.mensaje + " - ID eliminado: " + data.marcaId;
-          resultado.className = "success";
-          
-          // Recargar la lista de marcas
-          await cargarMarcas();
-        } else {
-          if (response.status === 404 && data.testing) {
-            resultado.textContent = "🔴 ERROR 404 SIMULADO: " + data.error + " - " + data.detalles;
-            resultado.className = "error";
-          } else {
-            resultado.textContent = "❌ " + data.error;
-            resultado.className = "error";
-          }
+            try {
+                resultado.className = "info";
+                resultado.textContent = "🔄 Eliminando marca...";
+                
+                const res = await fetch(`${API_URL}/${id}`, { 
+                    method: "DELETE" 
+                });
+                
+                const data = await res.json();
+                
+                if (res.ok) {
+                    resultado.className = "success";
+                    resultado.textContent = `✅ ${data.mensaje}`;
+                    document.getElementById("marcaInput").value = "";
+                    cargarMarcas();
+                } else {
+                    resultado.className = "error";
+                    resultado.textContent = `❌ Error: ${data.error}`;
+                }
+            } catch (err) {
+                resultado.className = "error";
+                resultado.textContent = "❌ Error de conexión con el servidor";
+                console.error("Error:", err);
+            }
         }
-      } catch (err) {
-        console.error("Error al eliminar marca:", err);
-        resultado.textContent = "❌ Error al conectar con el servidor";
-        resultado.className = "error";
-      }
-    }
-
-    // Función auxiliar para mostrar errores
-    function mostrarError(elementoId, mensaje) {
-      const elemento = document.getElementById(elementoId);
-      elemento.textContent = "❌ " + mensaje;
-      elemento.className = "error";
-    }
-
-    // Event listeners
-    document.getElementById("nuevaMarca").addEventListener("input", validarEnTiempoReal);
-    
-    document.getElementById("nuevaMarca").addEventListener("keypress", function(event) {
-      if (event.key === "Enter") {
-        registrarMarca();
-      }
-    });
-
-    document.getElementById("marcaEditNombre").addEventListener("keypress", function(event) {
-      if (event.key === "Enter") {
-        actualizarMarca();
-      }
-    });
-
-    // Inicializar estado del botón
-    document.getElementById("btnRegistrar").disabled = true;
-  </script>
+    </script>
 </body>
 </html>
