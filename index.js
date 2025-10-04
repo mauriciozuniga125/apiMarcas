@@ -25,6 +25,9 @@ db.connect(err => {
   }
 });
 
+// ✅ Variable para modo testing
+const MODO_TESTING = process.env.MODO_TESTING === 'true';
+
 // ✅ Función para validar que solo contiene letras y espacios
 function validarSoloLetras(texto) {
   const regex = /^[A-Za-zÁáÉéÍíÓóÚúÑñ\s]+$/;
@@ -118,6 +121,16 @@ app.post("/api/marcas", (req, res) => {
 
 // ✅ Endpoint PUT para actualizar una marca
 app.put("/api/marcas/:id", (req, res) => {
+  // 🔴 SIMULAR ERROR 404 EN MODO TESTING
+  if (MODO_TESTING) {
+    console.log("🔴 MODO TESTING: Simulando error 404 para PUT");
+    return res.status(404).json({ 
+      error: "Marca no encontrada - Modo Testing Activado",
+      testing: true,
+      detalles: "Este es un error simulado para pruebas de frontend"
+    });
+  }
+
   const marcaId = req.params.id;
   const { nombre } = req.body;
 
@@ -172,6 +185,16 @@ app.put("/api/marcas/:id", (req, res) => {
 
 // ✅ Endpoint DELETE para eliminar una marca
 app.delete("/api/marcas/:id", (req, res) => {
+  // 🔴 SIMULAR ERROR 404 EN MODO TESTING
+  if (MODO_TESTING) {
+    console.log("🔴 MODO TESTING: Simulando error 404 para DELETE");
+    return res.status(404).json({ 
+      error: "Marca no encontrada - Modo Testing Activado",
+      testing: true,
+      detalles: "Este es un error simulado para pruebas de frontend"
+    });
+  }
+
   const marcaId = req.params.id;
 
   // Verificar si la marca existe
@@ -201,8 +224,25 @@ app.delete("/api/marcas/:id", (req, res) => {
   });
 });
 
+// ✅ Endpoint para controlar modo testing (solo desarrollo)
+app.post("/api/testing/modo", (req, res) => {
+  const { activado } = req.body;
+  
+  if (process.env.NODE_ENV !== 'production') {
+    MODO_TESTING = activado === true;
+    console.log(`🛠️ Modo Testing ${MODO_TESTING ? 'ACTIVADO' : 'DESACTIVADO'}`);
+    res.json({ 
+      modoTesting: MODO_TESTING,
+      mensaje: `Modo Testing ${MODO_TESTING ? 'activado' : 'desactivado'}`
+    });
+  } else {
+    res.status(403).json({ error: "Modo testing no disponible en producción" });
+  }
+});
+
 // ✅ Puerto dinámico
 const PORT = process.env.PORT || 3000;
 app.listen(PORT, () => {
   console.log(`🚀 Servidor corriendo en puerto ${PORT}`);
+  console.log(`🛠️ Modo Testing: ${MODO_TESTING ? 'ACTIVADO 🔴' : 'DESACTIVADO ✅'}`);
 });
