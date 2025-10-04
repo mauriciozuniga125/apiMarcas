@@ -38,12 +38,30 @@ app.get("/", (req, res) => {
 
 // ✅ Endpoint GET para obtener marcas
 app.get("/api/marcas", (req, res) => {
-  db.query("SELECT id_marca AS id, nom_marca AS nombre FROM marcas", (err, rows) => {
+  db.query("SELECT id_marca AS id, nom_marca AS nombre FROM marcas ORDER BY id_marca", (err, rows) => {
     if (err) {
       console.error(err);
       return res.status(500).json({ error: "Error al obtener marcas" });
     }
     res.json(rows);
+  });
+});
+
+// ✅ Endpoint GET para obtener una marca específica
+app.get("/api/marcas/:id", (req, res) => {
+  const marcaId = req.params.id;
+  
+  db.query("SELECT id_marca AS id, nom_marca AS nombre FROM marcas WHERE id_marca = ?", [marcaId], (err, rows) => {
+    if (err) {
+      console.error(err);
+      return res.status(500).json({ error: "Error al obtener la marca" });
+    }
+    
+    if (rows.length === 0) {
+      return res.status(404).json({ error: "Marca no encontrada" });
+    }
+    
+    res.json(rows[0]);
   });
 });
 
@@ -93,6 +111,91 @@ app.post("/api/marcas", (req, res) => {
           id: nuevoId,
           nombre: nombre.trim()
         }
+      });
+    });
+  });
+});
+
+// ✅ Endpoint PUT para actualizar una marca
+app.put("/api/marcas/:id", (req, res) => {
+  const marcaId = req.params.id;
+  const { nombre } = req.body;
+
+  // Validar que se envió el nombre
+  if (!nombre) {
+    return res.status(400).json({ error: "El nombre de la marca es requerido" });
+  }
+
+  // Validar que solo contiene letras
+  if (!validarSoloLetras(nombre)) {
+    return res.status(400).json({ 
+      error: "El nombre de la marca solo debe contener letras y espacios. No se permiten números ni caracteres especiales." 
+    });
+  }
+
+  // Validar longitud mínima
+  if (nombre.trim().length < 2) {
+    return res.status(400).json({ 
+      error: "El nombre de la marca debe tener al menos 2 caracteres" 
+    });
+  }
+
+  // Verificar si la marca existe
+  db.query("SELECT id_marca FROM marcas WHERE id_marca = ?", [marcaId], (err, results) => {
+    if (err) {
+      console.error(err);
+      return res.status(500).json({ error: "Error al verificar la marca" });
+    }
+
+    if (results.length === 0) {
+      return res.status(404).json({ error: "Marca no encontrada" });
+    }
+
+    // Actualizar la marca
+    const query = "UPDATE marcas SET nom_marca = ? WHERE id_marca = ?";
+    db.query(query, [nombre.trim(), marcaId], (err, result) => {
+      if (err) {
+        console.error(err);
+        return res.status(500).json({ error: "Error al actualizar la marca" });
+      }
+
+      res.json({
+        mensaje: "Marca actualizada con éxito",
+        marca: {
+          id: parseInt(marcaId),
+          nombre: nombre.trim()
+        }
+      });
+    });
+  });
+});
+
+// ✅ Endpoint DELETE para eliminar una marca
+app.delete("/api/marcas/:id", (req, res) => {
+  const marcaId = req.params.id;
+
+  // Verificar si la marca existe
+  db.query("SELECT id_marca FROM marcas WHERE id_marca = ?", [marcaId], (err, results) => {
+    if (err) {
+      console.error(err);
+      return res.status(500).json({ error: "Error al verificar la marca" });
+    }
+
+    if (results.length === 0) {
+      return res.status(404).json({ error: "Marca no encontrada" });
+    }
+
+    // Eliminar la marca
+    const query = "DELETE FROM marcas WHERE id_marca = ?";
+    db.query(query, [marcaId], (err, result) => {
+      if (err) {
+        console.error(err);
+        return res.status(500).json({ error: "Error al eliminar la marca" });
+      }
+
+      res.json({
+        mensaje: "Marca eliminada con éxito",
+        marcaId: parseInt(marcaId)
       });
     });
   });
