@@ -25,6 +25,12 @@ db.connect(err => {
   }
 });
 
+// ✅ Función para validar que solo contiene letras y espacios
+function validarSoloLetras(texto) {
+  const regex = /^[A-Za-zÁáÉéÍíÓóÚúÑñ\s]+$/;
+  return regex.test(texto);
+}
+
 // ✅ Servir index.html desde la raíz
 app.get("/", (req, res) => {
   res.sendFile(path.join(__dirname, "index.html"));
@@ -50,6 +56,20 @@ app.post("/api/marcas", (req, res) => {
     return res.status(400).json({ error: "El nombre de la marca es requerido" });
   }
 
+  // Validar que solo contiene letras
+  if (!validarSoloLetras(nombre)) {
+    return res.status(400).json({ 
+      error: "El nombre de la marca solo debe contener letras y espacios. No se permiten números ni caracteres especiales." 
+    });
+  }
+
+  // Validar longitud mínima
+  if (nombre.trim().length < 2) {
+    return res.status(400).json({ 
+      error: "El nombre de la marca debe tener al menos 2 caracteres" 
+    });
+  }
+
   // Primero obtenemos el máximo ID actual para incrementarlo
   db.query("SELECT MAX(id_marca) as maxId FROM marcas", (err, results) => {
     if (err) {
@@ -61,7 +81,7 @@ app.post("/api/marcas", (req, res) => {
 
     // Insertar la nueva marca
     const query = "INSERT INTO marcas (id_marca, nom_marca) VALUES (?, ?)";
-    db.query(query, [nuevoId, nombre], (err, result) => {
+    db.query(query, [nuevoId, nombre.trim()], (err, result) => {
       if (err) {
         console.error(err);
         return res.status(500).json({ error: "Error al registrar la marca" });
@@ -71,7 +91,7 @@ app.post("/api/marcas", (req, res) => {
         mensaje: "Marca registrada con éxito",
         marca: {
           id: nuevoId,
-          nombre: nombre
+          nombre: nombre.trim()
         }
       });
     });
